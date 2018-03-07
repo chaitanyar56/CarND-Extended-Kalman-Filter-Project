@@ -32,7 +32,6 @@ FusionEKF::FusionEKF() {
         0, 0, 0.09;
 
   /**
-  TODO:
     * Finish initializing the FusionEKF.
     * Set the process and measurement noises
   */
@@ -43,8 +42,8 @@ FusionEKF::FusionEKF() {
   ekf_.P_ = MatrixXd(4,4);
   ekf_.P_ << 1, 0, 0, 0,
         0, 1, 0, 0,
-        0, 0, 1000, 0,
-        0, 0, 0, 1000;
+        0, 0, 1, 0,
+        0, 0, 0, 1;
   //state transition Matrix
   ekf_.F_ = MatrixXd(4,4);
   ekf_.F_ << 1, 0, 1, 0,
@@ -70,7 +69,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    ****************************************************************************/
   if (!is_initialized_) {
     /**
-    TODO:
       * Initialize the state ekf_.x_ with the first measurement.
       * Create the covariance matrix.
       * Remember: you'll need to convert radar from polar to cartesian coordinates.
@@ -88,7 +86,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       float phi = measurement_pack.raw_measurements_[1];
       float rho_dot = measurement_pack.raw_measurements_[2];
 
-      ekf_.x_ << rho * cos(phi) , rho * sin(phi) , 0, 0; //rho_dot * cos(phi) , rho_dot * sin(phi);
+      ekf_.x_ << rho * cos(phi) , rho * sin(phi) , 0 , 0;//rho_dot * cos(phi) , rho_dot * sin(phi);
 
 
     }
@@ -111,18 +109,17 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    ****************************************************************************/
 
   /**
-   TODO:
      * Update the state transition matrix F according to the new elapsed time.
       - Time is measured in seconds.
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-   float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt - expressed in seconds
+   const float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;	//dt - expressed in seconds
 	 previous_timestamp_ = measurement_pack.timestamp_;
 
-	 float dt_2 = dt * dt;
-	 float dt_3 = dt_2 * dt;
-	 float dt_4 = dt_3 * dt;
+	 const float dt_2 = dt * dt;
+	 const float dt_3 = dt_2 * dt;
+	 const float dt_4 = dt_3 * dt;
 
 	 //Modify the F matrix so that the time is integrated
 	 ekf_.F_(0, 2) = dt;
@@ -142,8 +139,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    ****************************************************************************/
 
   /**
-   TODO:
-     * Use the sensor type to perform the update step.
+      * Use the sensor type to perform the update step.
      * Update the state and covariance matrices.
    */
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <algorithm>
 #include "tools.h"
 
 using Eigen::VectorXd;
@@ -12,7 +13,6 @@ Tools::~Tools() {}
 VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
                               const vector<VectorXd> &ground_truth) {
   /**
-  TODO:
     * Calculate the RMSE here.
   */
   VectorXd rmse(4);
@@ -50,7 +50,6 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
 
 MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
   /**
-  TODO:
     * Calculate a Jacobian here.
   */
   MatrixXd Hj(3,4);
@@ -61,15 +60,11 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 	float vy = x_state(3);
 
 	//pre-compute a set of terms to avoid repeated calculation
-	float c1 = px*px+py*py;
+  //avoid division by zero
+  const float eps = 0.0001;
+	const float c1 = std::max(eps, px*px+py*py);
 	float c2 = sqrt(c1);
 	float c3 = (c1*c2);
-
-	//check division by zero
-	if(fabs(c1) < 0.0001){
-		cout << "CalculateJacobian () - Error - Division by Zero" << endl;
-		return Hj;
-	}
 
 	//compute the Jacobian matrix
 	Hj << (px/c2), (py/c2), 0, 0,

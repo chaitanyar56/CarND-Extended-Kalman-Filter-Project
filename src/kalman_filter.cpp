@@ -5,6 +5,9 @@ using Eigen::VectorXd;
 
 #include <iostream>
 
+//normalize angle between -pi to pi
+void NormalizeAngle(double& phi);
+
 // Please note that the Eigen library does not initialize
 // VectorXd or MatrixXd objects with zeros upon creation.
 
@@ -24,7 +27,6 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 
 void KalmanFilter::Predict() {
   /**
-  TODO:
     * predict the state
   */
   x_ = F_ * x_;
@@ -34,27 +36,17 @@ void KalmanFilter::Predict() {
 
 void KalmanFilter::Update(const VectorXd &z) {
   /**
-  TODO:
     * update the state by using Kalman Filter equations
   */
   VectorXd z_pred = H_ * x_;
 	VectorXd y = z - z_pred;
-	MatrixXd Ht = H_.transpose();
-  MatrixXd PHt = P_ * Ht;
-	MatrixXd S = H_ * PHt + R_;
-	MatrixXd Si = S.inverse();
-	MatrixXd K = PHt * Si;
 
-	//new estimate
-	x_ = x_ + (K * y);
-	long x_size = x_.size();
-	MatrixXd I = MatrixXd::Identity(x_size, x_size);
-	P_ = (I - K * H_) * P_;
+  UpdateCommon(y);
+
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
-  TODO:
     * update the state by using Extended Kalman Filter equations
   */
 
@@ -77,24 +69,23 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   //adjust y between -pi to pi
   const double pi = 3.14159265358979323846;
 
-  if (y[1] > pi){
-    y[1] -= 2*pi;
-  }
-  else if ( y[1] < -pi){
-    y[1] += 2*pi;
-  }
+  NormalizeAngle(y(1));
 
-	MatrixXd Ht = H_.transpose();
-	MatrixXd S = H_ * P_ * Ht + R_;
-	MatrixXd Si = S.inverse();
-	MatrixXd PHt = P_ * Ht;
-	MatrixXd K = PHt * Si;
+	UpdateCommon(y);
 
-	//new estimate
-	x_ = x_ + (K * y);
-	long x_size = x_.size();
-	MatrixXd I = MatrixXd::Identity(x_size, x_size);
-	P_ = (I - K * H_) * P_;
+}
 
+void KalmanFilter::UpdateCommon(const VectorXd& y)
+{
+  const MatrixXd PHt = P_ * H_.transpose();
+  const MatrixXd S = H_ * PHt + R_;
+  const MatrixXd K = PHt * S.inverse();
 
+  x_ += K * y;
+  P_ -= K * H_ * P_;
+}
+
+void NormalizeAngle(double& phi)
+{
+  phi = atan2(sin(phi), cos(phi));
 }
